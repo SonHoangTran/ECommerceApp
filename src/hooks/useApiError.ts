@@ -136,7 +136,7 @@ export const useAsyncOperation = <T = unknown>(
   options: UseApiErrorOptions = {}
 ): UseAsyncOperationReturn<T> => {
   const [loading, setLoading] = useState(false);
-  const { error, setError, clearError, handleError } = useApiError(options);
+  const { error,  clearError, handleError } = useApiError(options);
 
   const execute = useCallback(
     async (operation: () => Promise<T>): Promise<T | undefined> => {

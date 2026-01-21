@@ -347,7 +347,7 @@ import {
   mergeCartItem,
   updateItemQuantity,
   removeCartItem,
-  recalculateCart,
+  // recalculateCart,
 } from "../api/cart";
 
 /* ======================

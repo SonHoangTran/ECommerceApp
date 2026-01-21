@@ -1,28 +1,20 @@
-// src/components/product/ProductCard.tsx
-
 import type { Product } from '../../types/product';
 
-interface ProductCardProps {
+interface Props {
   product: Product;
-  onAddToCart?: (product: Product) => void;
+  onAddToCart: (productId: number) => void;
 }
 
-export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
+export default function ProductCard({ product, onAddToCart }: Props) {
   return (
-    <div style={{ border: '1px solid #ddd', padding: 12 }}>
-      <img
-        src={product.thumbnail}
-        alt={product.title}
-        width={150}
-      />
-
+    <div className="product-card">
+      <img src={product.thumbnail} alt={product.title} />
       <h3>{product.title}</h3>
       <p>${product.price}</p>
-      <p>⭐ {product.rating}</p>
 
-      <button onClick={() => onAddToCart?.(product)}>
-        Add to cart
+      <button onClick={() => onAddToCart(product.id)}>
+        Add to Cart
       </button>
     </div>
   );
-};
+}

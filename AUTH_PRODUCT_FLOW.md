@@ -1,11 +1,11 @@
-# E-Commerce App – Luồng xử lý Product & Logout
+# E-Commerce App – Luồng xử lý Product (Infinite Scroll + Search) & Logout
 
 Tài liệu này mô tả **luồng xử lý (flow)** trong ứng dụng React + TypeScript cho:
 
-* Product → ProductList
+* Product → ProductList (Infinite Scroll + Search)
 * Logout
 
-Mục tiêu: giúp hiểu **bản chất React, Context, API layer**, không chỉ code chạy.
+Mục tiêu: hiểu **bản chất React (state, effect, re-render)**, **API layer**, **tư duy tách trách nhiệm**.
 
 ---
 
@@ -14,44 +14,44 @@ Mục tiêu: giúp hiểu **bản chất React, Context, API layer**, không ch�
 ```
 UI (Component / Page)
    ↓
-Context (Auth / State dùng chung)
+State (useState, useEffect)
    ↓
-API Layer (fetch wrapper)
+API Layer (products.ts)
    ↓
 DummyJSON API
 ```
 
 Nguyên tắc:
 
-* **Page**: giữ state, gọi API
+* **Page**: giữ state + điều khiển flow
 * **Component**: chỉ render UI
-* **Context**: chia sẻ state toàn app
-* **API layer**: tất cả fetch tập trung 1 chỗ
+* **API layer**: tất cả fetch tập trung một chỗ
+* **State đổi → React tự re-render**
 
 ---
 
-## 2. Luồng Product → ProductList
+## 2. Luồng Product → ProductList (Infinite Scroll + Search)
 
 ### 2.1 Các file liên quan
 
 ```
 src/
- ├─ types/product.ts        (định nghĩa kiểu dữ liệu)
- ├─ api/products.ts         (gọi API products)
- ├─ pages/ProductList.tsx   (page, giữ state)
+ ├─ types/product.ts
+ ├─ api/products.ts
+ ├─ pages/ProductList.tsx
  └─ components/
-     └─ ProductCard.tsx     (UI hiển thị 1 product)
+     └─ product/ProductCard.tsx
 ```
 
 ---
 
-### 2.2 Product Type (types/product.ts)
+## 2.2 Product Type (types/product.ts)
 
 Mục đích:
 
-* Định nghĩa **shape dữ liệu**
-* Giúp TypeScript check lỗi sớm
+* Định nghĩa **kiểu dữ liệu chuẩn**
 * Dùng chung cho API + UI
+* Tránh lỗi runtime
 
 ```ts
 export interface Product {
@@ -63,88 +63,217 @@ export interface Product {
 }
 ```
 
-👉 Nếu API trả thiếu field → TS báo lỗi ngay.
-
 ---
 
-### 2.3 API Layer – getProducts (api/products.ts)
+## 2.3 API Layer – getProducts (api/products.ts)
 
-Mục đích:
+### Vai trò
 
 * Page **không gọi fetch trực tiếp**
-* Dễ đổi API / mock / test
+* Dễ thay API / mock / test
+* Gom toàn bộ logic request
+
+### API hỗ trợ 2 mode
+
+* **Normal list**
+* **Search list**
 
 ```ts
-export const getProducts = (skip = 0, limit = 20) => {
-  return api.get<ProductsResponse>(`/products?skip=${skip}&limit=${limit}`);
-};
+getProducts(skip, limit, query?)
 ```
 
-Flow:
+Mapping API DummyJSON:
+
+* Không search:
 
 ```
-ProductList → getProducts()
-            → api.get()
-            → apiRequest()
-            → fetch(dummyjson)
+GET /products?skip=0&limit=20
+```
+
+* Có search:
+
+```
+GET /products/search?q=phone&skip=0&limit=20
 ```
 
 ---
 
-### 2.4 ProductList Page (pages/ProductList.tsx)
+## 2.4 ProductList – Trách nhiệm chính
 
-#### Trách nhiệm của ProductList
+ProductList **không chỉ render**, mà còn:
 
-* Giữ state:
+* Quản lý state:
 
   * products
+  * skip
+  * hasMore
   * loading
-  * error
-* Fetch data khi component **mount**
-* Render danh sách ProductCard
+  * isFetchingMore
+  * searchQuery
+  * debouncedSearchQuery
+* Điều khiển:
+
+  * initial load
+  * infinite scroll
+  * search + debounce
+* Quyết định **khi nào gọi API**
 
 ---
 
-#### Luồng chạy chi tiết
+## 2.5 Luồng load sản phẩm ban đầu (Initial Load)
 
 ```
 User vào /products
    ↓
 ProductList mount
    ↓
-useEffect([]) chạy 1 lần
+useEffect(debouncedSearchQuery)
    ↓
-fetchProducts()
+fetchProducts(isLoadMore = false)
    ↓
-getProducts()
+getProducts(skip=0, limit=20)
    ↓
-setProducts()
+setProducts(response.products)
    ↓
-React re-render UI
+setSkip(20)
+   ↓
+React re-render ProductGrid
+```
+
+📌 Chỉ **ProductGrid render lại**, header & search không đổi.
+
+---
+
+## 2.6 Infinite Scroll – Load thêm khi chạm đáy
+
+### Điều kiện trigger
+
+```
+window.innerHeight + window.scrollY
+>= documentHeight - threshold
+```
+
+và:
+
+* Không đang fetch
+* Còn dữ liệu (`hasMore = true`)
+
+---
+
+### Luồng Infinite Scroll
+
+```
+User scroll xuống cuối trang
+   ↓
+handleScroll detect chạm đáy
+   ↓
+fetchProducts(isLoadMore = true)
+   ↓
+getProducts(skip=20, limit=20)
+   ↓
+append products mới vào list cũ
+   ↓
+setSkip(40)
+   ↓
+React re-render ProductGrid
+```
+
+📌 **Chỉ load thêm 20 sản phẩm mỗi lần**
+
+📌 **Không fetch liên tục khi chưa chạm đáy**
+
+---
+
+## 2.7 Search với Debounce (Quan trọng)
+
+### Vì sao cần debounce?
+
+Nếu không debounce:
+
+```
+gõ "iphone"
+→ i
+→ ip
+→ iph
+→ ipho
+→ iphon
+→ iphone
+```
+
+➡️ **6 request API** ❌
+
+---
+
+### Luồng Search + Debounce
+
+```
+User gõ vào ô search
+   ↓
+setSearchQuery()
+   ↓
+useEffect(searchQuery)
+   ↓
+setTimeout(400ms)
+   ↓
+setDebouncedSearchQuery()
 ```
 
 ---
 
-#### Vì sao dùng useEffect([])?
+### Khi debouncedSearchQuery thay đổi
 
-* `[]` = chỉ chạy **1 lần**
-* Tương đương `componentDidMount`
-* Tránh fetch lại vô hạn
+```
+debouncedSearchQuery change
+   ↓
+reset:
+   - products = []
+   - skip = 0
+   - hasMore = true
+   ↓
+fetchProducts(isLoadMore = false)
+   ↓
+getProducts(search query)
+   ↓
+render lại danh sách mới
+```
+
+📌 Infinite scroll **vẫn hoạt động bình thường với search**
 
 ---
 
-### 2.5 ProductCard
+## 2.8 Clear Search
 
-Mục đích:
+Khi user xoá hết text search:
 
-* Chỉ hiển thị UI
-* Không chứa logic fetch
-
-```tsx
-<ProductCard product={product} />
+```
+searchQuery = ''
+   ↓
+debouncedSearchQuery = ''
+   ↓
+reset skip + products
+   ↓
+fetchProducts list mặc định
 ```
 
-👉 Đây là nguyên tắc **Separation of Concerns**.
+➡️ Trở về danh sách ban đầu
+
+---
+
+## 2.9 Tối ưu render – Vì sao không render lại header?
+
+Cách làm:
+
+```
+ProductList
+ ├─ ProductListHeader (static)
+ └─ ProductGrid (dynamic)
+```
+
+* `products` chỉ truyền vào `ProductGrid`
+* Khi products đổi → **chỉ grid render lại**
+
+👉 Tránh re-render không cần thiết
+👉 Chuẩn tư duy performance React
 
 ---
 
@@ -161,72 +290,64 @@ src/
 
 ---
 
-### 3.2 Auth Context – Vai trò
+## 3.2 AuthContext – Vai trò
 
-AuthContext chịu trách nhiệm:
+AuthContext quản lý:
 
-* Lưu trạng thái đăng nhập
-* Chia sẻ user cho toàn app
-* Cung cấp login / logout
+* isAuthenticated
+* user
+* token
+* login()
+* logout()
 
-```ts
-{
-  isAuthenticated,
-  user,
-  loading,
-  login(),
-  logout()
-}
-```
+➡️ **Toàn app dùng chung trạng thái auth**
 
 ---
 
-### 3.3 Logout Flow (chi tiết)
-
-#### Khi user click Logout
+## 3.3 Logout Flow
 
 ```
-Header
-  ↓
+User click Logout (Header)
+   ↓
 logout()
-  ↓
+   ↓
 authApi.logout()
-  ↓
-localStorage.clear token + user
-  ↓
-set user = null
+   ↓
+localStorage.remove token + user
+   ↓
 set isAuthenticated = false
-  ↓
+set user = null
+   ↓
 React re-render toàn app
 ```
 
 ---
 
-### 3.4 Điều gì xảy ra sau logout?
+## 3.4 Sau khi Logout
 
 * Header:
 
-  * Không còn user → hiện Login link
+  * Không còn user → hiện Login
 * ProtectedRoute:
 
-  * isAuthenticated = false
   * Redirect về /login
 * API:
 
   * Không còn token trong header
 
+📌 Không reload page
+📌 Không cần gọi API logout
+
 ---
 
-### 3.5 Vì sao logout không cần gọi API?
+## 3.5 Vì sao logout không gọi API?
 
 DummyJSON:
 
-* Không có endpoint logout thật
-* JWT chỉ là demo
+* Không có logout thật
+* Token chỉ demo
 
-➡️ Logout bản chất là:
-
-> **Xoá trạng thái phía client**
+➡️ Logout = **xoá trạng thái phía client**
 
 ---
 
@@ -234,17 +355,19 @@ DummyJSON:
 
 ### Product Flow
 
-* Page fetch data
-* Component render UI
-* API layer tách biệt
-* State thay đổi → React tự render
+* Infinite scroll = **load theo nhu cầu**
+* Search = **debounce + reset paging**
+* Page điều khiển flow
+* Component chỉ render
+* State đổi → React tự render
 
 ### Logout Flow
 
-* Không reload page
+* Context là trung tâm
+* Không reload
 * Không gọi API
-* Context update → UI đổi toàn bộ
+* UI tự cập nhật theo state
 
+---
 
-
-End of document.
+**End of document.**

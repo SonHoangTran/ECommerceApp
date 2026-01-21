@@ -1,5 +1,3 @@
-// Type definitions for cart
-
 export interface CartItem {
   id: number;
   title: string;
@@ -7,7 +5,6 @@ export interface CartItem {
   quantity: number;
   total: number;
   discountPercentage: number;
-  discountedPrice: number;
   thumbnail: string;
 }
 

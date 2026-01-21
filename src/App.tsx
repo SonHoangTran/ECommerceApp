@@ -8,6 +8,7 @@ import { OrderConfirmation } from './pages/OrderConfirmation';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { Loading } from './components/common/Loading';
 import { Header } from './components/layout/Header';
+import { CartProvider } from './context/CartContext';
 
 /**
  * Root route component that handles redirects based on authentication
@@ -31,8 +32,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Header />
-        <Routes>
+        <CartProvider>
+          <Header />
+          <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/products" element={<ProductList />} />
@@ -68,7 +70,8 @@ function App() {
           
           {/* Catch all - redirect to products */}
           <Route path="*" element={<Navigate to="/products" replace />} />
-        </Routes>
+          </Routes>
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );

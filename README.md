@@ -1,73 +1,105 @@
-# React + TypeScript + Vite
+# 🛒 ShopMart – E-Commerce Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ShopMart is a modern e-commerce web application built with **React**, **TypeScript**, and **Vite**.  
+The project demonstrates a complete online shopping flow including product browsing, cart management, authentication, and checkout.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 🌐 Live Demo
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+https://ecommerceweb-pink.vercel.app/login
 
-## Expanding the ESLint configuration
+### Test Account
+- **Username:** emilys  
+- **Password:** emilyspass  
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## ✨ Features
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 🔐 Authentication
+- User login with JWT token
+- Protected routes
+- Auto logout on token expiration
+- Persistent authentication state (localStorage)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 📦 Product Listing
+- Responsive 4-column product grid
+- Infinite scroll (20 products per load)
+- Search with debounce (800ms)
+- Product information:
+  - Image
+  - Title
+  - Price
+  - Rating
+  - Discount badge
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 🛒 Shopping Cart
+- Add products to cart
+- Update item quantity (optimistic UI)
+- Remove individual items
+- Clear entire cart
+- Persistent cart state using localStorage
+- Real-time cart badge in header
+
+---
+
+### 💳 Checkout
+#### Shipping Information
+- Recipient name
+- Phone number
+- Email
+- Address (postal code, street, detail)
+- Delivery notes (optional)
+
+#### Payment Information
+- Payment method selection:
+  - Credit Card
+  - Debit Card
+  - PayPal
+- Card number auto-formatting (####-####-####-####)
+- Expiry date (MM/YY)
+- CVV (masked input)
+
+#### Validation
+- Real-time validation
+- Email & phone format validation
+- Card number length validation (15–16 digits)
+- Expiry date validation (not expired)
+
+---
+
+### 📋 Order Confirmation
+- Order summary
+- Generated order ID
+- Estimated delivery date
+- Print receipt option
+
+---
+
+### ⚠️ Error Handling
+- Network error handling
+- User-friendly error messages
+- Retry mechanism
+- Loading states & skeleton UI
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Usage |
+|----------|------|
+| React 19 | UI Library |
+| TypeScript | Static typing |
+| Vite | Build tool |
+| React Router v7 | Client-side routing |
+| Context API | Global state management |
+| DummyJSON API | Mock backend |
+| Vercel | Deployment |
+
+---

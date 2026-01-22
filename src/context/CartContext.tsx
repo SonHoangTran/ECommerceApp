@@ -525,6 +525,22 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     fetchCart();
   }, []);
 
+   /**
+   * Lắng nghe event logout để reset cart state
+   */
+   useEffect(() => {
+    const handleLogout = () => {
+      setCart(null);  // Reset cart state → Header sẽ re-render
+    };
+
+    window.addEventListener('auth-logout', handleLogout);
+    
+    return () => {
+      window.removeEventListener('auth-logout', handleLogout);
+    };
+  }, []);
+
+
   return (
     <CartContext.Provider
       value={{
@@ -553,3 +569,5 @@ export const useCartContext = () => {
   }
   return context;
 };
+
+ 

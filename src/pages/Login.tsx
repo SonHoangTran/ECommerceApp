@@ -225,6 +225,9 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    minHeight: 50,      // Chiều cao cố định
+    transition: 'background-color 0.2s',  // Smooth transition
+
   },
   buttonDisabled: {
     backgroundColor: '#95a5a6',
@@ -451,7 +454,6 @@ export const Login = () => {
           >
             {isLoading ? (
               <>
-                <Loading size="small" />
                 <span>Logging in...</span>
               </>
             ) : (

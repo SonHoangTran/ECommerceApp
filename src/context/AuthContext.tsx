@@ -67,10 +67,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
    * Logout user
    */
   const logout = useCallback(() => {
-    authApi.logout();
-    setIsAuthenticated(false);
-    setUser(null);
-    setToken(null);
+      // 1. Clear auth via API
+      authApi.logout();
+    
+      // 2. Reset auth state
+      setIsAuthenticated(false);
+      setUser(null);
+      setToken(null);
+      
+      // 3. Clear cart localStorage
+      localStorage.removeItem('cart');
+      
+      // 4. Dispatch event để CartContext reset state
+      window.dispatchEvent(new Event('auth-logout'));
+
+    
   }, []);
 
   /**

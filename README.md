@@ -8,7 +8,7 @@ The project demonstrates a complete online shopping flow including product brows
 
 ## 🌐 Live Demo
 
-https://ecommerceweb-pink.vercel.app/login
+https://ecommerceweb-brown.vercel.app/login
 
 ### Test Account
 - **Username:** emilys  
